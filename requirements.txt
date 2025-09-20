@@ -1,0 +1,10 @@
+requests
+tqdm
+scikit-learn
+pandas
+seaborn
+matplotlib
+hydra-core
+black
+pylint
+commitizen
