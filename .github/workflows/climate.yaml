@@ -29,5 +29,10 @@ jobs:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Post reports as comments in GitHub PRs
+          
+          echo "# Climate Analysis Report" > report.md
           cat output_metrics.json >> report.md
-          cml comment create report.md
+          echo "## Summary report" >> report.md
+          cml-publish summary_plot.png --md >> report.md
+          
+          cml-send-comment report.md
