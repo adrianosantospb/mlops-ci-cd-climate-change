@@ -1,0 +1,8 @@
+experiment:
+  name: My Experiment
+  version: 1.0.0
+  description: This is a sample experiment configuration.
+  dataset_url: https://www.research-collection.ethz.ch/bitstreams/42a2f58b-d925-4352-908f-91db854466a1/download
+  dataset_file_name: dataset.csv
+  dataset_folder: data
+  dataset_file_path: data/dataset.csv
