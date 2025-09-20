@@ -1,7 +1,7 @@
 experiment:
-  name: "My Experiment"
+  name: "Climate change"
   version: "1.0.0"
-  description: "This is a sample experiment configuration."
+  description: "Modeling Swiss farmer's attitudes about climate change."
   dataset_url: "https://www.research-collection.ethz.ch/bitstreams/42a2f58b-d925-4352-908f-91db854466a1/download"
   dataset_file_name: "dataset.csv"
   dataset_folder: "data"
