@@ -1,0 +1,30 @@
+name: climate-analysis
+on: [push]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    # optionally use a convenient Ubuntu LTS + DVC + CML image
+    container: ghcr.io/iterative/cml:0-dvc2-base1
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Run climate analysis
+        run: |
+          echo "Dataset download and model training started..."
+          python src/get_dataset.py
+
+          echo "Preprocessing dataset and training model..."
+          python src/dataset_preprocessing.py
+
+          echo "Training model..."
+          python src/train.py
+          
+          echo "Model training completed. Check the output files for results."
+          echo output_metrics.json
+      
+      - name: Commit and push results
+        env:
+          GIT_AUTHOR_NAME: github-actions
+          GIT_AUTHOR_EMAIL: adriano.nego@gmail.com
