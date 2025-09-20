@@ -6,3 +6,4 @@ experiment:
   dataset_file_name: "dataset.csv"
   dataset_folder: "data"
   dataset_file_path: "data/dataset.csv"
+  dataset_file_preprocessed: "data/dataset_preprocessed.csv"
