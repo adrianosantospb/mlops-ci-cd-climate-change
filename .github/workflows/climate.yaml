@@ -52,7 +52,7 @@ jobs:
               echo "" >> report.md
               echo "## Output Metrics" >> report.md
               echo "" >> report.md
-              echo '```json' >> report.md
+              echo '```' >> report.md
               cat output_metrics.json >> report.md
               echo '```' >> report.md
 
