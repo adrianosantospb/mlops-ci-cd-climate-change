@@ -9,7 +9,7 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    container: ghcr.io/iterative/cml:0-dvc3-base1
+    container: ghcr.io/iterative/cml:0-dvc2-base1
     
     permissions:
       contents: read
@@ -34,7 +34,7 @@ jobs:
         run: |
           set -e
           
-          # Check required files
+          # Verificar se os arquivos existem
           if [ ! -f output_metrics.json ]; then
             echo "Error: output_metrics.json not found"
             exit 1
@@ -44,17 +44,15 @@ jobs:
             exit 1
           fi
 
-          # ✅ Criar arquivo markdown primeiro
-          cat > report.md << EOF
-# Climate Analysis Report
+          # Construir o relatório com sintaxe inline para a imagem
+          echo "# Climate Analysis Report" > report.md
+          echo "" >> report.md
+          echo '```json' >> report.md
+          cat output_metrics.json >> report.md
+          echo '```' >> report.md
+          echo "" >> report.md
+          echo "## Summary Plot" >> report.md
+          #echo summary_plot.png >> report.md
 
-\`\`\`json
-$(cat output_metrics.json)
-\`\`\`
-
-## Summary Plot
-![](./summary_plot.png)
-EOF
-
-          # ✅ Usar o arquivo criado como argumento
+          # Publish the report
           cml comment create report.md
