@@ -54,8 +54,8 @@ jobs:
           cat output_metrics.json >> report.md
           echo '```' >> report.md
 
-          echo "## Summary Plot" >> report.md
-          echo "![Summary Plot](summary_plot.png)" >> report.md
+          #echo "## Summary Plot" >> report.md
+          #echo "![Summary Plot](summary_plot.png)" >> report.md
 
           # Publish report as a PR comment
           cml comment create report.md
