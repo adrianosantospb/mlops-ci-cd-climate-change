@@ -44,10 +44,7 @@ jobs:
             exit 1
           fi
 
-          # Fazer upload da imagem primeiro e obter a URL
-          IMAGE_URL=$(cml publish summary_plot.png --title "Summary Plot" --md)
-          
-          # Construir o relatório
+          # Construir o relatório com sintaxe inline para a imagem
           echo "# Climate Analysis Report" > report.md
           echo "" >> report.md
           echo '```json' >> report.md
@@ -55,7 +52,7 @@ jobs:
           echo '```' >> report.md
           echo "" >> report.md
           echo "## Summary Plot" >> report.md
-          echo "![Summary Plot]($IMAGE_URL)" >> report.md
+          echo "![Summary Plot](./summary_plot.png)" >> report.md
 
-          # Publicar o relatório
+          # Publicar o relatório - o CML fará upload automático da imagem
           cml comment create report.md
