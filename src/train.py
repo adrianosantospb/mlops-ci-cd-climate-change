@@ -1,9 +1,16 @@
+import json
 import logging
-from typing import List
+from typing import List, Dict
 
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_predict
+from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
 import hydra
 from omegaconf import DictConfig
 
@@ -26,35 +33,21 @@ def load_dataset(path: str) -> pd.DataFrame:
 
 
 def identify_columns_to_drop(df: pd.DataFrame) -> List[str]:
-    """
-    Return a list of columns to be removed:
-      - columns containing 'net_name'
-      - predefined irrelevant columns (useless_cols)
-      - columns related to agricultural practices (practice_tokens)
-    """
+    """Return list of irrelevant or practice-related columns to drop."""
     all_features = df.columns.tolist()
-
     useless_cols = ["info_gew", "info_resul", "interviewtime", "id", "date"]
     practice_tokens = [
         "legum", "conc", "add", "lact", "breed", "covman",
         "comp", "drag", "cov", "plow", "solar", "biog", "ecodr"
     ]
-
-    drop_list = [feat for feat in all_features if "net_name" in feat] + useless_cols
-    practice_related = [
-        feat for feat in all_features
-        if any(token in feat for token in practice_tokens)
-    ]
-    drop_list.extend(practice_related)
+    drop_list = [f for f in all_features if "net_name" in f] + useless_cols
+    drop_list.extend([f for f in all_features if any(t in f for t in practice_tokens)])
     logger.info("Dropping features: %s", drop_list)
     return drop_list
 
 
 def encode_categorical_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Convert categorical (object) columns to numeric codes using pd.factorize.
-    Each category is mapped to an integer code.
-    """
+    """Convert categorical (object) columns to integer codes."""
     non_numeric = df.select_dtypes(include=["object"]).columns
     logger.info("Encoding categorical columns: %s", list(non_numeric))
     for col in non_numeric:
@@ -63,36 +56,55 @@ def encode_categorical_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def preprocess_dataset(input_path: str, output_path: str) -> pd.DataFrame:
-    """
-    Full preprocessing pipeline:
-      1. Load dataset
-      2. Drop irrelevant/practice-related columns
-      3. Encode categorical columns
-      4. Save the processed dataset
-    """
+    """Load, clean, encode, and save the dataset."""
     df = load_dataset(input_path)
-
     logger.info("Dataset contains %d records and %d features before processing.",
                 len(df), len(df.columns))
-
-    cols_to_drop = identify_columns_to_drop(df)
-    df.drop(columns=cols_to_drop, inplace=True)
+    df.drop(columns=identify_columns_to_drop(df), inplace=True)
     df = encode_categorical_columns(df)
-
-    logger.info("Saving preprocessed dataset to %s", output_path)
     df.to_csv(output_path, index=False)
     logger.info("Preprocessing complete. Final shape: %s", df.shape)
     return df
 
 
+# -------------------- NEW: model + metrics ---------------------------------- #
+def train_and_evaluate(df: pd.DataFrame, metrics_path: str = "metrics.json") -> Dict[str, float]:
+    """
+    Train a logistic regression model using 5-fold CV and save metrics.
+    Assumes target column is 'cons_general'.
+    """
+    if "cons_general" not in df.columns:
+        logger.warning("Target column 'cons_general' not found; skipping metrics.")
+        return {}
+
+    y = df.pop("cons_general").to_numpy()
+    y = np.where(y < 4, 0, 1)  # binarize
+    X = df.to_numpy()
+
+    # scale & impute
+    X = StandardScaler().fit_transform(X)
+    X = SimpleImputer(strategy="mean").fit_transform(X)
+
+    clf = LogisticRegression(max_iter=1000)
+    y_pred = cross_val_predict(clf, X, y, cv=5)
+
+    acc = np.mean(y_pred == y)
+    tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
+    specificity = tn / (tn + fp)
+    sensitivity = tp / (tp + fn)
+
+    metrics = {"accuracy": acc, "specificity": specificity, "sensitivity": sensitivity}
+    with open(metrics_path, "w") as f:
+        json.dump(metrics, f, indent=2)
+    logger.info("Metrics saved to %s: %s", metrics_path, metrics)
+    return metrics
+
+
 def plot_summary(df: pd.DataFrame, project_name: str, output_path: str = "summary_plot.png") -> None:
-    """
-    Create a nicer summary plot (example: count by region) with the project title.
-    """
+    """Plot record counts by region with the project title."""
     if "region" not in df.columns:
         logger.warning("Column 'region' not found; skipping plot.")
         return
-
     sns.set_theme(style="whitegrid", palette="pastel", font_scale=1.1)
     plt.figure(figsize=(8, 5))
     ax = sns.countplot(x="region", data=df, order=sorted(df["region"].unique()))
@@ -105,21 +117,18 @@ def plot_summary(df: pd.DataFrame, project_name: str, output_path: str = "summar
 
 
 # --------------------------------------------------------------------------- #
-# Entry point with Hydra configuration
+# Entry point
 # --------------------------------------------------------------------------- #
 @hydra.main(version_base=None, config_path="config", config_name="config")
 def main(cfg: DictConfig) -> None:
-    """
-    Hydra entry point.
-    Reads file paths from the configuration and executes the preprocessing pipeline,
-    then generates a summary plot with the project name as the title.
-    """
+    """Hydra entry point: preprocess, train, save metrics, and plot."""
     df = preprocess_dataset(
         input_path=cfg.experiment.dataset_file_path,
         output_path=cfg.experiment.dataset_file_preprocessed
     )
-
-    # Add a beautiful plot using the experiment name as title
+    # save metrics.json
+    train_and_evaluate(df.copy(), metrics_path="output_metrics.json")
+    # create a pretty plot
     plot_summary(df, project_name=cfg.experiment.name)
 
 
