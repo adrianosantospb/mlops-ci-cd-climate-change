@@ -33,7 +33,6 @@ jobs:
           echo "Running training script..."
           python src/train.py
           
-          
           ls -lh output_metrics.json summary_plot.png
 
       - name: Create CML report
