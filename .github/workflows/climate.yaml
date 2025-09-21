@@ -46,16 +46,16 @@ jobs:
 
               echo "# Climate Analysis Report" > report.md
               echo "" >> report.md
+              echo "## Output Metrics" >> report.md
+              echo "" >> report.md
+              #echo '```json' >> report.md
+              cat output_metrics.json >> report.md
+              #echo '```' >> report.md
+              echo "" >> report.md
+
               echo "## Summary Plot" >> report.md
               echo "" >> report.md
               echo "![](./summary_plot.png)" >> report.md
               echo "" >> report.md
-              echo "## Output Metrics" >> report.md
-              echo "" >> report.md
-              echo "" >> report.md
-              echo '```json' >> report.md
-              cat output_metrics.json >> report.md
-              echo '```' >> report.md
-              echo "" >> report.md
-
+              
               cml comment create report.md
