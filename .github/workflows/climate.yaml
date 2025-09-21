@@ -12,31 +12,31 @@ jobs:
     container: ghcr.io/iterative/cml:0-dvc2-base1
 
     steps:
-      # 1️⃣ Checkout the repo
+      # 1️⃣ Checkout the repository
       - uses: actions/checkout@v3
 
-      # 2️⃣ Install dependencies
+      # 2️⃣ Install dependencies from requirements.txt
       - name: Install dependencies
         run: pip install -r requirements.txt
 
       # 3️⃣ Run the full Python pipeline
       - name: Run climate analysis pipeline
         run: |
-          set -e  # ❗ Faz o job falhar se algum comando falhar
+          set -e  # ❗ Exit immediately if any command fails
           echo "Running training script..."
           python src/train.py
 
-          # Verifica se os arquivos foram criados
+          # Ensure required output files exist
           ls -lh output_metrics.json summary_plot.png
 
-      # 4️⃣ Create the Markdown report (sem autor)
+      # 4️⃣ Create the Markdown report and publish as PR comment
       - name: Create CML report
         env:
           REPO_TOKEN: ${{ secrets.CML_TOKEN }}
         run: |
-          set -e  # ❗ Garantir que o job pare se algum comando falhar
+          set -e  # ❗ Exit immediately if any command fails
 
-          # Verifica arquivos obrigatórios
+          # Check required files
           if [ ! -f output_metrics.json ]; then
             echo "Error: output_metrics.json not found"
             exit 1
@@ -57,5 +57,9 @@ jobs:
           echo "## Summary Plot" >> report.md
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
-          # Publish report as PR comment
-          cml comment create report.md --repo $GITHUB_REPOSITORY --token $REPO_TOKEN
+          # Publish report as a PR comment
+          # ❗ Use full URL to avoid CML invalid URL errors
+          cml comment create report.md \
+            --repo "https://github.com/${GITHUB_REPOSITORY}" \
+            --token $REPO_TOKEN \
+            --driver github
