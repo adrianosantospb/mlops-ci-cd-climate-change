@@ -32,7 +32,6 @@ jobs:
       - name: Create CML report
         env:
           REPO_TOKEN: ${{ secrets.CML_TOKEN }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login || github.actor }}
         run: |
           # Check files exist
           if [ ! -f output_metrics.json ]; then
@@ -46,7 +45,6 @@ jobs:
 
           # Build report.md
           echo "# Climate Analysis Report" > report.md
-          echo "Author of this PR: @$PR_AUTHOR" >> report.md
           echo "" >> report.md
 
           echo '```json' >> report.md
