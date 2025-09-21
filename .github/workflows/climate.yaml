@@ -41,4 +41,4 @@ jobs:
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
           # Publish the report as PR comment
-          cml publish report.md --md
+          cml comment create report.md --md
