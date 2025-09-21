@@ -58,8 +58,4 @@ jobs:
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
           # Publish report as a PR comment
-          # ❗ Use full URL and GitHub token to avoid CML token errors
-          cml comment create report.md \
-            --repo "https://github.com/${GITHUB_REPOSITORY}" \
-            --token $REPO_TOKEN \
-            --driver github
+          cml comment create report.md
