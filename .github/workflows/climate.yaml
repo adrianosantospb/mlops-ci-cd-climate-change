@@ -22,10 +22,11 @@ jobs:
       # 3️⃣ Run the full Python pipeline
       - name: Run climate analysis pipeline
         run: |
+          set -e  # ❗ Faz o job falhar se algum comando falhar
           echo "Running training script..."
           python src/train.py
 
-          # Ensure required files exist
+          # Verifica se os arquivos foram criados
           ls -lh output_metrics.json summary_plot.png
 
       # 4️⃣ Create the Markdown report (sem autor)
@@ -33,7 +34,9 @@ jobs:
         env:
           REPO_TOKEN: ${{ secrets.CML_TOKEN }}
         run: |
-          # Check files exist
+          set -e  # ❗ Garantir que o job pare se algum comando falhar
+
+          # Verifica arquivos obrigatórios
           if [ ! -f output_metrics.json ]; then
             echo "Error: output_metrics.json not found"
             exit 1
@@ -55,4 +58,4 @@ jobs:
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
           # Publish report as PR comment
-          cml comment create report.md --repo $GITHUB_REPOSITORY --sha $GITHUB_SHA  --token $REPO_TOKEN
+          cml comment create report.md --repo $GITHUB_REPOSITORY --token $REPO_TOKEN
