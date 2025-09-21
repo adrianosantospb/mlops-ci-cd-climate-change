@@ -9,32 +9,39 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    container: ghcr.io/iterative/cml:0-dvc2-base1
+    # ✅ Usar versão mais recente do CML
+    container: ghcr.io/iterative/cml:0-dvc3-base1
     
     permissions:
       contents: read
       pull-requests: write
 
     steps:
+      # 1️⃣ Checkout the repository
       - uses: actions/checkout@v3
 
+      # 2️⃣ Install dependencies from requirements.txt
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # 3️⃣ Run the full Python pipeline
       - name: Run climate analysis pipeline
         run: |
-          set -e
+          set -e  # ❗ Exit immediately if any command fails
           echo "Running training script..."
           python src/train.py
+
+          # Ensure required output files exist
           ls -lh output_metrics.json summary_plot.png
 
+      # 4️⃣ Create the Markdown report and publish as PR comment
       - name: Create CML report
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # ✅ Use the automatic GitHub token
         run: |
-          set -e
-          
-          # Verificar se os arquivos existem
+          set -e  # ❗ Exit immediately if any command fails
+
+          # Check required files
           if [ ! -f output_metrics.json ]; then
             echo "Error: output_metrics.json not found"
             exit 1
@@ -44,15 +51,14 @@ jobs:
             exit 1
           fi
 
-          # Construir o relatório com sintaxe inline para a imagem
-          echo "# Climate Analysis Report" > report.md
-          echo "" >> report.md
-          echo '```json' >> report.md
-          cat output_metrics.json >> report.md
-          echo '```' >> report.md
-          echo "" >> report.md
-          echo "## Summary Plot" >> report.md
-          echo summary_plot.png >> report.md
+          # ✅ Usar cml comment create com approach direto e atualizado
+          cml comment create --update << EOF
+          # Climate Analysis Report
 
-          # Publicar o relatório - o CML fará upload automático da imagem
-          cml comment create report.md
+          \`\`\`json
+          $(cat output_metrics.json)
+          \`\`\`
+
+          ## Summary Plot
+          ![](./summary_plot.png)
+          EOF
