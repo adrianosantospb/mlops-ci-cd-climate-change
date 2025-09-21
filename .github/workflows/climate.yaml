@@ -9,7 +9,7 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    container: ghcr.io/iterative/cml:0-dvc2-base1
+    container: ghcr.io/iterative/cml:0-dvc3-base1
     
     permissions:
       contents: read
@@ -51,4 +51,4 @@ jobs:
           cat output_metrics.json >> report.md
           echo '```' >> report.md
           # Publish the report
-          cml comment create report.md --watermark-title="" --publish-native
+          cml comment create report.md --watermark-title=""
