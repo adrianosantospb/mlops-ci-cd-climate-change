@@ -32,7 +32,7 @@ jobs:
       # 4️⃣ Create the Markdown report and publish as PR comment
       - name: Create CML report
         env:
-          REPO_TOKEN: ${{ secrets.CML_TOKEN }}
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # ✅ Use the automatic GitHub token
         run: |
           set -e  # ❗ Exit immediately if any command fails
 
@@ -58,7 +58,7 @@ jobs:
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
           # Publish report as a PR comment
-          # ❗ Use full URL to avoid CML invalid URL errors
+          # ❗ Use full URL and GitHub token to avoid CML token errors
           cml comment create report.md \
             --repo "https://github.com/${GITHUB_REPOSITORY}" \
             --token $REPO_TOKEN \
