@@ -28,15 +28,17 @@ jobs:
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Post reports as comments in GitHub PRs
-          
           # Create a Markdown report
           echo "# Climate Analysis Report" > report.md
+
+          # Append JSON metrics as code block
           echo '```json' >> report.md
           cat output_metrics.json >> report.md
           echo '```' >> report.md
+
+          # Append the summary plot
           echo "## Summary Plot" >> report.md
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
-          # Publish report as PR comment (new way)
-          cml-publish report.md --md --md-title "Climate Analysis Report"
+          # Publish the report as PR comment
+          cml publish report.md --md
