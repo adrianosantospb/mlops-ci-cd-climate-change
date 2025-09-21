@@ -30,9 +30,13 @@ jobs:
         run: |
           # Post reports as comments in GitHub PRs
           
+          # Create a Markdown report
           echo "# Climate Analysis Report" > report.md
+          echo '```json' >> report.md
           cat output_metrics.json >> report.md
-          echo "## Summary report" >> report.md
-          cml-publish summary_plot.png --md >> report.md
-          
-          cml comment create report.md
+          echo '```' >> report.md
+          echo "## Summary Plot" >> report.md
+          echo "![Summary Plot](summary_plot.png)" >> report.md
+
+          # Publish report as PR comment (new way)
+          cml-publish report.md --md --md-title "Climate Analysis Report"
