@@ -34,6 +34,7 @@ jobs:
         run: |
           set -e
           
+          # Verificar se os arquivos existem
           if [ ! -f output_metrics.json ]; then
             echo "Error: output_metrics.json not found"
             exit 1
@@ -43,12 +44,18 @@ jobs:
             exit 1
           fi
 
+          # Fazer upload da imagem primeiro e obter a URL
+          IMAGE_URL=$(cml publish summary_plot.png --title "Summary Plot" --md)
+          
+          # Construir o relatório
           echo "# Climate Analysis Report" > report.md
           echo "" >> report.md
           echo '```json' >> report.md
           cat output_metrics.json >> report.md
           echo '```' >> report.md
+          echo "" >> report.md
           echo "## Summary Plot" >> report.md
-          echo "![Summary Plot](summary_plot.png)" >> report.md
+          echo "![Summary Plot]($IMAGE_URL)" >> report.md
 
+          # Publicar o relatório
           cml comment create report.md
