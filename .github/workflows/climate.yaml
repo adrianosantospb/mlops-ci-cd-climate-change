@@ -52,7 +52,7 @@ jobs:
           echo '```' >> report.md
           echo "" >> report.md
           echo "## Summary Plot" >> report.md
-          #echo summary_plot.png >> report.md
+          echo "![](./summary_plot.png)" >> report.md
 
           # Publish the report
           cml comment create report.md
