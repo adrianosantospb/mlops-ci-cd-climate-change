@@ -1,44 +1,60 @@
 name: climate-analysis
-on: [push]
+on: [push, pull_request]
+
 jobs:
   run:
     runs-on: ubuntu-latest
-    # optionally use a convenient Ubuntu LTS + DVC + CML image
     container: ghcr.io/iterative/cml:0-dvc2-base1
+
     steps:
+      # 1️⃣ Checkout the repository
       - uses: actions/checkout@v3
+
+      # 2️⃣ Install dependencies
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-      - name: Run climate analysis
+
+      # 3️⃣ Run the full Python pipeline (download, preprocess, train, metrics, plot)
+      - name: Run climate analysis pipeline
         run: |
-          echo "Dataset download and model training started..."
-          python src/get_dataset.py
-
-          echo "Preprocessing dataset and training model..."
-          python src/dataset_preprocessing.py
-
-          echo "Training model..."
+          echo "Running training script..."
           python src/train.py
-          
-          echo "Model training completed. Check the output files for results."
-          echo output_metrics.json
 
-      - name: Write CML report
+          # Confirm that the output files exist
+          echo "Generated files:"
+          ls -lh output_metrics.json summary_plot.png
+
+      # 4️⃣ Create the Markdown report and publish as PR comment
+      - name: Create CML report
         env:
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Capture PR author or fallback to actor
+          PR_AUTHOR: ${{ github.event.pull_request.user.login || github.actor }}
         run: |
-          # Create a Markdown report
-          echo "# Climate Analysis Report" > report.md
+          # Ensure the required files exist
+          if [ ! -f output_metrics.json ]; then
+            echo "Error: output_metrics.json not found"
+            exit 1
+          fi
+          if [ ! -f summary_plot.png ]; then
+            echo "Error: summary_plot.png not found"
+            exit 1
+          fi
 
-          # Append JSON metrics as code block
+          # Create the Markdown report locally
+          echo "# Climate Analysis Report" > report.md
+          echo "Author of this PR: @$PR_AUTHOR" >> report.md
+          echo "" >> report.md
+
+          # Add metrics as JSON code block
           echo '```json' >> report.md
           cat output_metrics.json >> report.md
           echo '```' >> report.md
 
-          # Append the summary plot
+          # Add summary plot
           echo "## Summary Plot" >> report.md
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
-          # Publish the report as PR comment
-          cml comment create report.md --md
+          # Publish the report as a PR comment
+          cml comment create report.md
