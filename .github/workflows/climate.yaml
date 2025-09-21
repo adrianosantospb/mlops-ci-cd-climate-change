@@ -56,4 +56,4 @@ jobs:
               cat output_metrics.json >> report.md
               echo '```' >> report.md
 
-              cml comment create report.md --publish=false
+              cml comment create report.md
