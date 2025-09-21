@@ -55,4 +55,4 @@ jobs:
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
           # Publish report as PR comment
-          cml comment create report.md --repo $GITHUB_REPOSITORY --sha $GITHUB_SHA
+          cml comment create report.md --repo $GITHUB_REPOSITORY --sha $GITHUB_SHA  --token $REPO_TOKEN
