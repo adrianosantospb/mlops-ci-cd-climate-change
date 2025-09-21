@@ -23,8 +23,22 @@ jobs:
           
           echo "Model training completed. Check the output files for results."
           echo output_metrics.json
-      
-      - name: Commit and push results
+
+      - name: Write CML report
         env:
-          GIT_AUTHOR_NAME: github-actions
-          GIT_AUTHOR_EMAIL: adriano.nego@gmail.com
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create a Markdown report
+          echo "# Climate Analysis Report" > report.md
+
+          # Append JSON metrics as code block
+          echo '```json' >> report.md
+          cat output_metrics.json >> report.md
+          echo '```' >> report.md
+
+          # Append the summary plot
+          echo "## Summary Plot" >> report.md
+          echo "![Summary Plot](summary_plot.png)" >> report.md
+
+          # Publish the report as PR comment
+          cml publish report.md --md
