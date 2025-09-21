@@ -35,4 +35,4 @@ jobs:
           echo "## Summary report" >> report.md
           cml-publish summary_plot.png --md >> report.md
           
-          cml-send-comment report.md
+          cml comment create report.md
