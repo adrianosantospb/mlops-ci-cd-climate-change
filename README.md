@@ -94,6 +94,8 @@ Outputs:
 * **output_metrics.json** – Model evaluation metrics (accuracy, sensitivity, specificity)
 * **summary_plot.png** – Summary plot of records by region
 
+![Output](docs/output_image.png)
+
 ## CI/CD Pipeline
 
 The GitHub Actions workflow (.github/workflows/climate-analysis.yml) automates:
