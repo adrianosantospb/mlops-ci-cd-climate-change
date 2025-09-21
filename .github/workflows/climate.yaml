@@ -24,8 +24,16 @@ jobs:
       - name: Run climate analysis pipeline
         run: |
           set -e
+          echo "Downloading dataset ..."
+          python src/get_dataset.py
+          
+          echo "Dataset preprocessing..."
+          python src/dataset_preprocessing.py
+
           echo "Running training script..."
           python src/train.py
+          
+          
           ls -lh output_metrics.json summary_plot.png
 
       - name: Create CML report
