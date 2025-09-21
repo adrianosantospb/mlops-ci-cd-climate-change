@@ -51,9 +51,5 @@ jobs:
           echo '```json' >> report.md
           cat output_metrics.json >> report.md
           echo '```' >> report.md
-          echo "" >> report.md
-          echo "## Summary Plot" >> report.md
-          
-
           # Publish the report
           cml comment create report.md
