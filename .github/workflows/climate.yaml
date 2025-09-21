@@ -1,44 +1,58 @@
 name: climate-analysis
-on: [push]
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
 jobs:
   run:
     runs-on: ubuntu-latest
-    # optionally use a convenient Ubuntu LTS + DVC + CML image
     container: ghcr.io/iterative/cml:0-dvc2-base1
+
     steps:
+      # 1️⃣ Checkout the repo
       - uses: actions/checkout@v3
+
+      # 2️⃣ Install dependencies
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-      - name: Run climate analysis
-        run: |
-          echo "Dataset download and model training started..."
-          python src/get_dataset.py
+        run: pip install -r requirements.txt
 
-          echo "Preprocessing dataset and training model..."
-          python src/dataset_preprocessing.py
-
-          echo "Training model..."
+      # 3️⃣ Run the full Python pipeline
+      - name: Run climate analysis pipeline
+        run: |
+          echo "Running training script..."
           python src/train.py
-          
-          echo "Model training completed. Check the output files for results."
-          echo output_metrics.json
 
-      - name: Write CML report
+          # Ensure required files exist
+          ls -lh output_metrics.json summary_plot.png
+
+      # 4️⃣ Create the Markdown report (sem autor)
+      - name: Create CML report
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_TOKEN: ${{ secrets.CML_TOKEN }}
         run: |
-          # Create a Markdown report
-          echo "# Climate Analysis Report" > report.md
+          # Check files exist
+          if [ ! -f output_metrics.json ]; then
+            echo "Error: output_metrics.json not found"
+            exit 1
+          fi
+          if [ ! -f summary_plot.png ]; then
+            echo "Error: summary_plot.png not found"
+            exit 1
+          fi
 
-          # Append JSON metrics as code block
+          # Build report.md
+          echo "# Climate Analysis Report" > report.md
+          echo "" >> report.md
+
           echo '```json' >> report.md
           cat output_metrics.json >> report.md
           echo '```' >> report.md
 
-          # Append the summary plot
           echo "## Summary Plot" >> report.md
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
-          # Publish the report as PR comment
-          cml publish report.md --md
+          # Publish report as PR comment
+          cml comment create report.md --repo $GITHUB_REPOSITORY --sha $GITHUB_SHA  --token $REPO_TOKEN
