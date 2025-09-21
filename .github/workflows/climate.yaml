@@ -47,7 +47,6 @@ jobs:
           # Construir o relatório com sintaxe inline para a imagem
           echo "# Climate Analysis Report" > report.md
           echo "![](./summary_plot.png)" >> report.md
-          echo "" >> report.md
           echo '```json' >> report.md
           cat output_metrics.json >> report.md
           echo '```' >> report.md
