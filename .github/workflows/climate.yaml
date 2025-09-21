@@ -1,5 +1,9 @@
 name: climate-analysis
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   run:
@@ -15,7 +19,7 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      # 3️⃣ Run the full Python pipeline (download, preprocess, train, metrics, plot)
+      # 3️⃣ Run the full Python pipeline (dataset, preprocessing, training, metrics, plot)
       - name: Run climate analysis pipeline
         run: |
           echo "Running training script..."
@@ -28,8 +32,8 @@ jobs:
       # 4️⃣ Create the Markdown report and publish as PR comment
       - name: Create CML report
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Capture PR author or fallback to actor
+          REPO_TOKEN: ${{ secrets.CML_TOKEN }}
+          # Capture PR author or fallback to workflow actor
           PR_AUTHOR: ${{ github.event.pull_request.user.login || github.actor }}
         run: |
           # Ensure the required files exist
@@ -42,7 +46,7 @@ jobs:
             exit 1
           fi
 
-          # Create the Markdown report locally
+          # Build the Markdown report locally
           echo "# Climate Analysis Report" > report.md
           echo "Author of this PR: @$PR_AUTHOR" >> report.md
           echo "" >> report.md
