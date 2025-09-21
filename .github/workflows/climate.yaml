@@ -1,9 +1,10 @@
 name: climate-analysis
+
 on:
-  push:
-    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
 
 jobs:
   run:
@@ -11,32 +12,29 @@ jobs:
     container: ghcr.io/iterative/cml:0-dvc2-base1
 
     steps:
-      # 1️⃣ Checkout the repository
+      # 1️⃣ Checkout the repo
       - uses: actions/checkout@v3
 
       # 2️⃣ Install dependencies
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      # 3️⃣ Run the full Python pipeline (dataset, preprocessing, training, metrics, plot)
+      # 3️⃣ Run the full Python pipeline
       - name: Run climate analysis pipeline
         run: |
           echo "Running training script..."
           python src/train.py
 
-          # Confirm that the output files exist
-          echo "Generated files:"
+          # Ensure required files exist
           ls -lh output_metrics.json summary_plot.png
 
-      # 4️⃣ Create the Markdown report and publish as PR comment
+      # 4️⃣ Create the Markdown report with PR author
       - name: Create CML report
         env:
           REPO_TOKEN: ${{ secrets.CML_TOKEN }}
-          # Capture PR author or fallback to workflow actor
           PR_AUTHOR: ${{ github.event.pull_request.user.login || github.actor }}
         run: |
-          # Ensure the required files exist
+          # Check files exist
           if [ ! -f output_metrics.json ]; then
             echo "Error: output_metrics.json not found"
             exit 1
@@ -46,19 +44,17 @@ jobs:
             exit 1
           fi
 
-          # Build the Markdown report locally
+          # Build report.md
           echo "# Climate Analysis Report" > report.md
           echo "Author of this PR: @$PR_AUTHOR" >> report.md
           echo "" >> report.md
 
-          # Add metrics as JSON code block
           echo '```json' >> report.md
           cat output_metrics.json >> report.md
           echo '```' >> report.md
 
-          # Add summary plot
           echo "## Summary Plot" >> report.md
           echo "![Summary Plot](summary_plot.png)" >> report.md
 
-          # Publish the report as a PR comment
+          # Publish report as PR comment
           cml comment create report.md
